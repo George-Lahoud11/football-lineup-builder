@@ -4,6 +4,14 @@ from formations import formations
 def change_formation(*args):
     update_player_positions()
 
+def update_squad_name(event=None):
+    name = squad_entry.get()
+
+    if name.strip() == "":
+        squad_heading.config(text="My Squad")
+    else:
+        squad_heading.config(text=name)
+
 root = tk.Tk()
 
 root.title("Football Lineup Builder")
@@ -24,7 +32,17 @@ squad_entry = tk.Entry(
     width=20
 )
 
+squad_entry.bind("<Return>", update_squad_name)
+
 squad_entry.pack(side="left", padx=5)
+
+squad_heading = tk.Label(
+    root,
+    text="My Squad",
+    font=("Arial", 18, "bold")
+)
+
+squad_heading.pack()
 
 formation_label = tk.Label(
     controls,
