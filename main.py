@@ -1,6 +1,26 @@
 import tkinter as tk
 from formations import formations
 
+def change_formation(*args):
+    positions = formations[formation_var.get()]
+
+    for i in range(len(players)):
+        x, y = positions[i]
+
+        pitch.coords(
+            players[i]["circle_id"],
+            x - 25,
+            y - 25,
+            x + 25,
+            y + 25
+        )
+
+        pitch.coords(
+            players[i]["text_id"],
+            x,
+            y
+        )
+
 root = tk.Tk()
 
 root.title("Football Lineup Builder")
@@ -33,6 +53,8 @@ formation_label.pack(side="left", padx=5)
 formation_var = tk.StringVar()
 
 formation_var.set("4-3-3")
+
+formation_var.trace_add("write", change_formation)
 
 formation_menu = tk.OptionMenu(
     controls,
@@ -152,6 +174,5 @@ for i in range(len(players)):
 
     players[i]["circle_id"] = circle_id
     players[i]["text_id"] = text_id
-
 
 root.mainloop()
