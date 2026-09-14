@@ -2,24 +2,7 @@ import tkinter as tk
 from formations import formations
 
 def change_formation(*args):
-    positions = formations[formation_var.get()]
-
-    for i in range(len(players)):
-        x, y = positions[i]
-
-        pitch.coords(
-            players[i]["circle_id"],
-            x - 25,
-            y - 25,
-            x + 25,
-            y + 25
-        )
-
-        pitch.coords(
-            players[i]["text_id"],
-            x,
-            y
-        )
+    update_player_positions()
 
 root = tk.Tk()
 
@@ -174,6 +157,7 @@ for i in range(len(players)):
 
     players[i]["circle_id"] = circle_id
     players[i]["text_id"] = text_id
+    players[i]["slot"] = i
 
     pitch.tag_bind(
     circle_id,
@@ -185,6 +169,42 @@ for i in range(len(players)):
         text_id,
         "<Double-Button-1>",
         lambda event, p=players[i]: edit_player(p)
+    )
+
+    pitch.tag_bind(
+        circle_id,
+        "<Button-1>",
+        lambda event, p=players[i]: start_drag(event, p)
+    )
+
+    pitch.tag_bind(
+        circle_id,
+        "<B1-Motion>",
+        lambda event, p=players[i]: drag_player(event, p)
+    )
+
+    pitch.tag_bind(
+        circle_id,
+        "<ButtonRelease-1>",
+        lambda event, p=players[i]: stop_drag(event, p)
+    )
+
+    pitch.tag_bind(
+        text_id,
+        "<Button-1>",
+        lambda event, p=players[i]: start_drag(event, p)
+    )
+
+    pitch.tag_bind(
+        text_id,
+        "<B1-Motion>",
+        lambda event, p=players[i]: drag_player(event, p)
+    )
+
+    pitch.tag_bind(
+        text_id,
+        "<ButtonRelease-1>",
+        lambda event, p=players[i]: stop_drag(event, p)
     )
 
 def edit_player(player):
@@ -221,5 +241,76 @@ def edit_player(player):
     )
 
     save_button.pack(pady=10)
+
+def start_drag(event, player):
+    player["dragging"] = True
+
+
+def drag_player(event, player):
+    if player.get("dragging"):
+        x = event.x
+        y = event.y
+
+        pitch.coords(
+            player["circle_id"],
+            x - 25,
+            y - 25,
+            x + 25,
+            y + 25
+        )
+
+        pitch.coords(
+            player["text_id"],
+            x,
+            y
+        )
+
+def update_player_positions():
+    positions = formations[formation_var.get()]
+
+    for player in players:
+        x, y = positions[player["slot"]]
+
+        pitch.coords(
+            player["circle_id"],
+            x - 25,
+            y - 25,
+            x + 25,
+            y + 25
+        )
+
+        pitch.coords(
+            player["text_id"],
+            x,
+            y
+        )
+
+def stop_drag(event, player):
+    player["dragging"] = False
+
+    closest_player = None
+    closest_distance = 999999
+
+    for other_player in players:
+        if other_player == player:
+            continue
+
+        other_slot = other_player["slot"]
+        other_x, other_y = formations[formation_var.get()][other_slot]
+
+        distance = ((event.x - other_x) ** 2 + (event.y - other_y) ** 2) ** 0.5
+
+        if distance < closest_distance:
+            closest_distance = distance
+            closest_player = other_player
+
+    if closest_distance < 60:
+        player["slot"], closest_player["slot"] = (
+            closest_player["slot"],
+            player["slot"]
+        )
+
+    update_player_positions()
+
 
 root.mainloop()
