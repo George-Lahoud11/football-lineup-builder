@@ -12,6 +12,12 @@ def update_squad_name(event=None):
     else:
         squad_heading.config(text=name)
 
+def reset_lineup():
+    for i in range(len(players)):
+        players[i]["slot"] = i
+
+    update_player_positions()
+
 root = tk.Tk()
 
 root.title("Football Lineup Builder")
@@ -19,6 +25,14 @@ root.geometry("900x700")
 
 controls = tk.Frame(root)
 controls.pack(pady=10)
+
+reset_button = tk.Button(
+    controls,
+    text="Reset Lineup",
+    command=reset_lineup
+)
+
+reset_button.pack(side="left", padx=5)
 
 squad_label = tk.Label(
     controls,
