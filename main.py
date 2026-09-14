@@ -175,4 +175,51 @@ for i in range(len(players)):
     players[i]["circle_id"] = circle_id
     players[i]["text_id"] = text_id
 
+    pitch.tag_bind(
+    circle_id,
+    "<Double-Button-1>",
+    lambda event, p=players[i]: edit_player(p)
+    )
+
+    pitch.tag_bind(
+        text_id,
+        "<Double-Button-1>",
+        lambda event, p=players[i]: edit_player(p)
+    )
+
+def edit_player(player):
+    edit_window = tk.Toplevel(root)
+    edit_window.title("Edit Player")
+
+    tk.Label(edit_window, text="Name:").pack(pady=5)
+
+    name_entry = tk.Entry(edit_window)
+    name_entry.insert(0, player["name"])
+    name_entry.pack(pady=5)
+
+    tk.Label(edit_window, text="Number:").pack(pady=5)
+
+    number_entry = tk.Entry(edit_window)
+    number_entry.insert(0, player["number"])
+    number_entry.pack(pady=5)
+
+    def save_changes():
+        player["name"] = name_entry.get()
+        player["number"] = number_entry.get()
+
+        pitch.itemconfig(
+            player["text_id"],
+            text=f"{player['number']}\n{player['name']}"
+        )
+
+        edit_window.destroy()
+
+    save_button = tk.Button(
+        edit_window,
+        text="Save",
+        command=save_changes
+    )
+
+    save_button.pack(pady=10)
+
 root.mainloop()
