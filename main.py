@@ -1,5 +1,7 @@
 import tkinter as tk
 from formations import formations
+from PIL import Image, ImageDraw, ImageFont
+from tkinter import filedialog
 
 def change_formation(*args):
     update_player_positions()
@@ -18,6 +20,200 @@ def reset_lineup():
 
     update_player_positions()
 
+def export_lineup():
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".png",
+        filetypes=[("PNG Image", "*.png")],
+        title="Save Lineup"
+    )
+
+    if not file_path:
+        return
+
+    # Create image
+    image = Image.new(
+        "RGB",
+        (700, 700),
+        "white"
+    )
+
+    draw = ImageDraw.Draw(image)
+
+    # Fonts
+    try:
+        title_font = ImageFont.truetype("arialbd.ttf", 28)
+        player_font = ImageFont.truetype("arial.ttf", 13)
+        position_font = ImageFont.truetype("arial.ttf", 12)
+        formation_font = ImageFont.truetype("arial.ttf", 16)
+    except:
+        title_font = ImageFont.load_default()
+        player_font = ImageFont.load_default()
+        position_font = ImageFont.load_default()
+        formation_font = ImageFont.load_default()
+
+    # Squad heading
+    squad_name = squad_entry.get().strip()
+
+    if squad_name == "":
+        squad_name = "My Squad"
+
+    draw.text(
+        (350, 25),
+        squad_name,
+        fill="black",
+        font=title_font,
+        anchor="mm"
+    )
+
+    # Formation
+    draw.text(
+        (350, 55),
+        formation_var.get(),
+        fill="black",
+        font=formation_font,
+        anchor="mm"
+    )
+
+    # Pitch starts lower because of heading
+    offset_y = 80
+
+    # Pitch background
+    draw.rectangle(
+        (0, offset_y, 700, 680),
+        fill="#238636"
+    )
+
+    # Outer boundary
+    draw.rectangle(
+        (20, 20 + offset_y, 680, 580 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    # Halfway line
+    draw.line(
+        (20, 300 + offset_y, 680, 300 + offset_y),
+        fill="white",
+        width=3
+    )
+
+    # Centre circle
+    draw.ellipse(
+        (300, 250 + offset_y, 400, 350 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    # Top penalty box
+    draw.rectangle(
+        (220, 20 + offset_y, 480, 120 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    # Bottom penalty box
+    draw.rectangle(
+        (220, 480 + offset_y, 480, 580 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    positions = formations[formation_var.get()]
+
+    # Draw players
+    for player in players:
+        x, y = positions[player["slot"]]
+
+        y += offset_y
+
+        # Player circle
+        draw.ellipse(
+            (x - 25, y - 25, x + 25, y + 25),
+            fill="#7D2136",
+            outline="white",
+            width=2
+        )
+
+        # Shirt number
+        draw.text(
+            (x, y),
+            str(player["number"]),
+            fill="white",
+            font=player_font,
+            anchor="mm"
+        )
+
+        # Player name
+        draw.text(
+            (x, y + 34),
+            player["name"],
+            fill="white",
+            font=player_font,
+            anchor="mm"
+        )
+
+        # Position
+        draw.text(
+            (x, y + 50),
+            player["position"],
+            fill="white",
+            font=position_font,
+            anchor="mm"
+        )
+
+    # Centre spot
+    draw.ellipse(
+        (
+            346,
+            296 + offset_y,
+            354,
+            304 + offset_y
+        ),
+        fill="white"
+    )
+
+    # Top goal
+    draw.rectangle(
+        (300, 5 + offset_y, 400, 20 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    # Bottom goal
+    draw.rectangle(
+        (300, 580 + offset_y, 400, 595 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    image.save(file_path)
+
+    draw.ellipse(
+    (
+        346,
+        296 + offset_y,
+        354,
+        304 + offset_y
+            ),
+        fill="white"
+    )
+
+    # Top goal
+    draw.rectangle(
+        (300, 5 + offset_y, 400, 20 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    # Bottom goal
+    draw.rectangle(
+        (300, 580 + offset_y, 400, 595 + offset_y),
+        outline="white",
+        width=3
+    )
+
+    image.save(file_path)
+
 root = tk.Tk()
 
 root.title("Football Lineup Builder")
@@ -33,6 +229,14 @@ reset_button = tk.Button(
 )
 
 reset_button.pack(side="left", padx=5)
+
+export_button = tk.Button(
+    controls,
+    text="Export Image",
+    command=export_lineup
+)
+
+export_button.pack(side="left", padx=5)
 
 squad_label = tk.Label(
     controls,
@@ -85,7 +289,7 @@ pitch = tk.Canvas(
     root,
     width=700,
     height=600,
-    bg="green"
+    bg="#238636"
 )
 
 pitch.pack(pady=10)
@@ -178,18 +382,31 @@ for i in range(len(players)):
         y - 25,
         x + 25,
         y + 25,
-        fill="white"
+        fill="#7D2136",
+        outline="white",
+        width=2
     )
 
     text_id = pitch.create_text(
         x,
         y,
-        text=f"{players[i]['number']}\n{players[i]['name']}"
+        text=f"{players[i]['number']}\n{players[i]['name']}",
+        fill="white",
+        font=("Arial", 9, "bold")
+    )
+
+    position_id = pitch.create_text(
+        x,
+        y + 35,
+        text=players[i]["position"],
+        fill="white",
+        font=("Arial", 8)
     )
 
     players[i]["circle_id"] = circle_id
     players[i]["text_id"] = text_id
     players[i]["slot"] = i
+    players[i]["position_id"] = position_id
 
     pitch.tag_bind(
     circle_id,
@@ -297,6 +514,13 @@ def drag_player(event, player):
             y
         )
 
+        pitch.coords(
+            player["position_id"],
+            x,
+            y + 35
+        )
+
+
 def update_player_positions():
     positions = formations[formation_var.get()]
 
@@ -315,6 +539,12 @@ def update_player_positions():
             player["text_id"],
             x,
             y
+        )
+
+        pitch.coords(
+            player["position_id"],
+            x,
+            y + 35
         )
 
 def stop_drag(event, player):
