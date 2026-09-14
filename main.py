@@ -33,7 +33,7 @@ def export_lineup():
     # Create image
     image = Image.new(
         "RGB",
-        (700, 700),
+        (900, 780),
         "white"
     )
 
@@ -83,6 +83,37 @@ def export_lineup():
         fill="#238636"
     )
 
+    # Bench background
+    draw.rectangle(
+        (700, offset_y, 900, 760),
+        fill="#238636"
+    )
+
+    # Bench title
+    draw.text(
+        (800, offset_y + 25),
+        "BENCH",
+        fill="white",
+        font=formation_font,
+        anchor="mm"
+    )
+
+    draw.text(
+        (800, 120),
+        "MANAGER",
+        fill="white",
+        font=position_font,
+        anchor="mm"
+    )
+
+    draw.text(
+        (800, 135),
+        manager["name"],
+        fill="white",
+        font=player_font,
+        anchor="mm"
+    )
+
     # Outer boundary
     draw.rectangle(
         (20, 20 + offset_y, 680, 580 + offset_y),
@@ -121,13 +152,33 @@ def export_lineup():
     positions = formations[formation_var.get()]
 
     # Draw players
+    positions = formations[formation_var.get()]
+
     for player in players:
-        slot = positions[player["slot"]]
 
-        x, y = slot["coords"]
-        position = slot["position"]
+        if player["slot"] < 11:
+            slot = positions[player["slot"]]
 
-        y += offset_y
+            x, y = slot["coords"]
+            position = slot["position"]
+
+            y += offset_y
+
+        else:
+            bench_index = player["slot"] - 11
+
+            bench_export_positions = [
+                (800, 190),
+                (800, 270),
+                (800, 350),
+                (800, 430),
+                (800, 510),
+                (800, 590),
+                (800, 670)
+            ]
+
+            x, y = bench_export_positions[bench_index]
+            position = "SUB"
 
         # Player circle
         draw.ellipse(
@@ -137,7 +188,7 @@ def export_lineup():
             width=2
         )
 
-        # Shirt number
+        # Number
         draw.text(
             (x, y),
             str(player["number"]),
@@ -146,18 +197,16 @@ def export_lineup():
             anchor="mm"
         )
 
-        # Player name
         draw.text(
-            (x, y + 34),
+            (x, y + 32),
             player["name"],
             fill="white",
             font=player_font,
             anchor="mm"
         )
 
-        # Position
         draw.text(
-            (x, y + 50),
+            (x, y + 46),
             position,
             fill="white",
             font=position_font,
@@ -220,7 +269,7 @@ def export_lineup():
 root = tk.Tk()
 
 root.title("Football Lineup Builder")
-root.geometry("900x700")
+root.geometry("1100x700")
 
 controls = tk.Frame(root)
 controls.pack(pady=10)
@@ -288,7 +337,7 @@ formation_menu.pack(side="left", padx=5)
 
 pitch = tk.Canvas(
     root,
-    width=700,
+    width=900,
     height=600,
     bg="#238636"
 )
@@ -359,6 +408,35 @@ pitch.create_rectangle(
     width=3
 )
 
+# Bench area
+pitch.create_rectangle(
+    720, 20,
+    880, 580,
+    outline="white",
+    width=3
+)
+
+pitch.create_text(
+    800,
+    45,
+    text="BENCH",
+    fill="white",
+    font=("Arial", 14, "bold")
+)
+
+manager = {
+    "name": "Manager"
+}
+
+manager_text = pitch.create_text(
+    800,
+    75,
+    text=f"Manager\n{manager['name']}",
+    fill="white",
+    font=("Arial", 10, "bold"),
+    justify="center"
+)
+
 players = [
     {"name": "Player 1", "number": 1},
     {"name": "Player 2", "number": 2},
@@ -370,16 +448,42 @@ players = [
     {"name": "Player 8", "number": 8},
     {"name": "Player 9", "number": 9},
     {"name": "Player 10", "number": 10},
-    {"name": "Player 11", "number": 11}
+    {"name": "Player 11", "number": 11},
+
+    {"name": "Player 12", "number": 12},
+    {"name": "Player 13", "number": 13},
+    {"name": "Player 14", "number": 14},
+    {"name": "Player 15", "number": 15},
+    {"name": "Player 16", "number": 16},
+    {"name": "Player 17", "number": 17},
+    {"name": "Player 18", "number": 18}
 ]
 
 positions = formations["4-3-3"]
 
-for i in range(len(players)):
-    slot = positions[i]
+bench_positions = [
+    (800, 135),
+    (800, 200),
+    (800, 265),
+    (800, 330),
+    (800, 395),
+    (800, 460),
+    (800, 525)
+]
 
-    x, y = slot["coords"]
-    position = slot["position"]
+for i in range(len(players)):
+
+    if i < 11:
+        slot = positions[i]
+
+        x, y = slot["coords"]
+        position = slot["position"]
+
+    else:
+        bench_index = i - 11
+
+        x, y = bench_positions[bench_index]
+        position = "SUB"
 
     circle_id = pitch.create_oval(
         x - 25,
@@ -460,6 +564,12 @@ for i in range(len(players)):
         lambda event, p=players[i]: stop_drag(event, p)
     )
 
+    pitch.tag_bind(
+        manager_text,
+        "<Double-Button-1>",
+        lambda event: edit_manager()
+    )
+
 def edit_player(player):
     edit_window = tk.Toplevel(root)
     edit_window.title("Edit Player")
@@ -491,6 +601,42 @@ def edit_player(player):
         edit_window,
         text="Save",
         command=save_changes
+    )
+
+    save_button.pack(pady=10)
+
+def edit_manager():
+    edit_window = tk.Toplevel(root)
+    edit_window.title("Edit Manager")
+
+    tk.Label(
+        edit_window,
+        text="Manager Name:"
+    ).pack(pady=5)
+
+    name_entry = tk.Entry(edit_window)
+
+    name_entry.insert(
+        0,
+        manager["name"]
+    )
+
+    name_entry.pack(pady=5)
+
+    def save_manager():
+        manager["name"] = name_entry.get()
+
+        pitch.itemconfig(
+            manager_text,
+            text=f"Manager\n{manager['name']}"
+        )
+
+        edit_window.destroy()
+
+    save_button = tk.Button(
+        edit_window,
+        text="Save",
+        command=save_manager
     )
 
     save_button.pack(pady=10)
@@ -529,10 +675,18 @@ def update_player_positions():
     positions = formations[formation_var.get()]
 
     for player in players:
-        slot = positions[player["slot"]]
 
-        x, y = slot["coords"]
-        position = slot["position"]
+        if player["slot"] < 11:
+            slot = positions[player["slot"]]
+
+            x, y = slot["coords"]
+            position = slot["position"]
+
+        else:
+            bench_index = player["slot"] - 11
+
+            x, y = bench_positions[bench_index]
+            position = "SUB"
 
         pitch.coords(
             player["circle_id"],
@@ -571,9 +725,15 @@ def stop_drag(event, player):
 
         other_slot = other_player["slot"]
 
-        other_position = formations[formation_var.get()][other_slot]
+        if other_slot < 11:
+            other_position = formations[formation_var.get()][other_slot]
 
-        other_x, other_y = other_position["coords"]
+            other_x, other_y = other_position["coords"]
+
+        else:
+            bench_index = other_slot - 11
+
+            other_x, other_y = bench_positions[bench_index]
 
         distance = ((event.x - other_x) ** 2 + (event.y - other_y) ** 2) ** 0.5
 
