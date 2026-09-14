@@ -122,7 +122,10 @@ def export_lineup():
 
     # Draw players
     for player in players:
-        x, y = positions[player["slot"]]
+        slot = positions[player["slot"]]
+
+        x, y = slot["coords"]
+        position = slot["position"]
 
         y += offset_y
 
@@ -155,7 +158,7 @@ def export_lineup():
         # Position
         draw.text(
             (x, y + 50),
-            player["position"],
+            position,
             fill="white",
             font=position_font,
             anchor="mm"
@@ -278,9 +281,7 @@ formation_var.trace_add("write", change_formation)
 formation_menu = tk.OptionMenu(
     controls,
     formation_var,
-    "4-3-3",
-    "4-4-2",
-    "4-2-3-1"
+    *formations.keys()
 )
 
 formation_menu.pack(side="left", padx=5)
@@ -359,23 +360,26 @@ pitch.create_rectangle(
 )
 
 players = [
-    {"name": "Player 1", "number": 1, "position": "GK"},
-    {"name": "Player 2", "number": 2, "position": "RB"},
-    {"name": "Player 3", "number": 3, "position": "CB"},
-    {"name": "Player 4", "number": 4, "position": "CB"},
-    {"name": "Player 5", "number": 5, "position": "LB"},
-    {"name": "Player 6", "number": 6, "position": "CM"},
-    {"name": "Player 7", "number": 7, "position": "CM"},
-    {"name": "Player 8", "number": 8, "position": "CM"},
-    {"name": "Player 9", "number": 9, "position": "RW"},
-    {"name": "Player 10", "number": 10, "position": "ST"},
-    {"name": "Player 11", "number": 11, "position": "LW"}
+    {"name": "Player 1", "number": 1},
+    {"name": "Player 2", "number": 2},
+    {"name": "Player 3", "number": 3},
+    {"name": "Player 4", "number": 4},
+    {"name": "Player 5", "number": 5},
+    {"name": "Player 6", "number": 6},
+    {"name": "Player 7", "number": 7},
+    {"name": "Player 8", "number": 8},
+    {"name": "Player 9", "number": 9},
+    {"name": "Player 10", "number": 10},
+    {"name": "Player 11", "number": 11}
 ]
 
 positions = formations["4-3-3"]
 
 for i in range(len(players)):
-    x, y = positions[i]
+    slot = positions[i]
+
+    x, y = slot["coords"]
+    position = slot["position"]
 
     circle_id = pitch.create_oval(
         x - 25,
@@ -398,7 +402,7 @@ for i in range(len(players)):
     position_id = pitch.create_text(
         x,
         y + 35,
-        text=players[i]["position"],
+        text=position,
         fill="white",
         font=("Arial", 8)
     )
@@ -525,7 +529,10 @@ def update_player_positions():
     positions = formations[formation_var.get()]
 
     for player in players:
-        x, y = positions[player["slot"]]
+        slot = positions[player["slot"]]
+
+        x, y = slot["coords"]
+        position = slot["position"]
 
         pitch.coords(
             player["circle_id"],
@@ -547,6 +554,11 @@ def update_player_positions():
             y + 35
         )
 
+        pitch.itemconfig(
+            player["position_id"],
+            text=position
+        )
+
 def stop_drag(event, player):
     player["dragging"] = False
 
@@ -558,7 +570,10 @@ def stop_drag(event, player):
             continue
 
         other_slot = other_player["slot"]
-        other_x, other_y = formations[formation_var.get()][other_slot]
+
+        other_position = formations[formation_var.get()][other_slot]
+
+        other_x, other_y = other_position["coords"]
 
         distance = ((event.x - other_x) ** 2 + (event.y - other_y) ** 2) ** 0.5
 
